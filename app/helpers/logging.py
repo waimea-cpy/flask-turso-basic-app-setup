@@ -13,9 +13,11 @@ import logging
 init(autoreset=True)
 
 # Logging colours
-REQ_COL = Fore.CYAN
-ROUTE_COL = Fore.BLUE
-SESS_COL = Fore.YELLOW
+REQUEST_COL = Fore.CYAN
+ROUTE_COL   = Fore.BLUE
+SESSION_COL = Fore.YELLOW
+DB_COL      = Fore.MAGENTA
+
 
 # Load Flask and Turso environment variables from the .env file
 load_dotenv()
@@ -55,7 +57,7 @@ def init_logging(app):
             now = datetime.now().strftime("%H:%M:%S")
 
             # The URL
-            print(f"[{now}] Request: {REQ_COL}{request.method} {request.path}")
+            print(f"[{now}] Request: {REQUEST_COL}{request.method} {request.path}")
             # Matched routing rule
             if request.url_rule:
                 print(f"           Matches: {ROUTE_COL}{request.method.lower()}(\"{request.url_rule}\")")
@@ -76,7 +78,7 @@ def init_logging(app):
                 print(f"             Files: {ROUTE_COL}{dict(request.files)}")
             # Any session values
             if session:
-                print(f"           Session: {SESS_COL}{dict(session)}")
+                print(f"           Session: {SESSION_COL}{dict(session)}")
 
 
     #--------------------------------------------------
@@ -92,7 +94,56 @@ def init_logging(app):
             else:
                 # Nope, a static file, so show the full request/response
                 now = datetime.now().strftime("%H:%M:%S")
-                print(f"[{now}] Request: {REQ_COL}{request.method} {request.path} {colStatus(response)}{Fore.RESET}\n")
+                print(f"[{now}] Request: {REQUEST_COL}{request.method} {request.path} {colStatus(response)}{Fore.RESET}\n")
 
             return response
+
+
+#-----------------------------------------------------------
+# Converts the row data from a DB result set into a well
+# formatted string, not including large BLOB data, instead
+# adding a summary of the data
+#-----------------------------------------------------------
+def _format_result_rows(result):
+    spacing = " " * 20
+    columns = result.columns
+
+    summarised = "[\n"
+    for row in result.rows:
+        row_summary = f"{spacing}  {{\n"
+        for col, val in zip(columns, row):
+            row_summary += f"{spacing}    {col}: "
+            row_summary += f"<BLOB {len(val)} bytes>" if isinstance(val, (bytes, bytearray)) else f"'{val}'"
+            row_summary += ",\n"
+        row_summary += f"{spacing}  }},\n"
+        summarised += row_summary
+    summarised += f"{spacing}]"
+
+    return summarised
+
+
+#-----------------------------------------------------------
+# Log a given SQL request - Call prior to running the SQL
+#-----------------------------------------------------------
+def log_db_request(app, sql, params):
+    if app.debug:
+        print(f"            DB SQL: {DB_COL}{sql}")
+        print(f"            Params: {DB_COL}{params[0] if params else 'None'}")
+
+
+#-----------------------------------------------------------
+# Log result of an SQL request - Call after running the SQL
+#-----------------------------------------------------------
+def log_db_result(app, sql, result):
+    if app.debug:
+        sqlUp = sql.upper()
+
+        if 'SELECT' in sqlUp:
+            print(f"          Row Data: {DB_COL}{_format_result_rows(result)}")
+
+        elif 'UPDATE' in sqlUp or 'DELETE' in sqlUp:
+            print(f"              Rows: {DB_COL}{getattr(result, 'rows_affected', result)}")
+
+        elif 'INSERT' in sqlUp:
+            print(f"            New ID: {DB_COL}{getattr(result, 'last_insert_rowid', result)}")
 

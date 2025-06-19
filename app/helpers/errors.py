@@ -105,10 +105,12 @@ def init_error(app):
                 else:
                     if app.dbSQL:
                         print(f"           {ERR_COL}   Code: {CODE_COL}{app.dbSQL}")
+                        print(f"           {ERR_COL}   Data: {CODE_COL}{app.dbParams}")
                         print()
 
                         error_msg += f"""
                             <tr><th>Code</th><td><code>{app.dbSQL}</code></td></tr>
+                            <tr><th>Data</th><td>{app.dbParams}</td></tr>
                         """
 
             error_msg += "</table>"
