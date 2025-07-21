@@ -12,8 +12,5 @@ venv/
 # Environment variables
 .env
 
-# DB data file
-data.sqlite
-
 # VS Code project settings
 .vscode
