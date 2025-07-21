@@ -18,10 +18,6 @@ ROUTE_COL   = Fore.BLUE
 SESSION_COL = Fore.YELLOW
 DB_COL      = Fore.MAGENTA
 
-ERROR_COL   = Fore.RED
-WARNING_COL = Fore.YELLOW
-SUCCESS_COL = Fore.GREEN
-
 
 # Load Flask and Turso environment variables from the .env file
 load_dotenv()
@@ -36,16 +32,11 @@ logging.getLogger('werkzeug').setLevel(logging.CRITICAL)
 # Return a coloured status message
 #-----------------------------------------------------------
 def colStatus(response):
-    # Success?
     if response.status_code < 300:
-        return f"{SUCCESS_COL}{response.status}"
-
-    # Redirection?
+        return f"{Fore.GREEN}{response.status}"
     if response.status_code < 400:
-        return f"{WARNING_COL}{response.status}"
-
-    # Error!
-    return f"{ERROR_COL}{response.status}"
+        return f"{Fore.YELLOW}{response.status}"
+    return f"{Fore.RED}{response.status}"
 
 
 #-----------------------------------------------------------
@@ -155,17 +146,4 @@ def log_db_result(app, sql, result):
 
         elif 'INSERT' in sqlUp:
             print(f"            New ID: {DB_COL}{getattr(result, 'last_insert_rowid', result)}")
-
-
-#-----------------------------------------------------------
-# Log result of a sync with the remote Turso DB
-#-----------------------------------------------------------
-def log_sync_result(app, operation, error=None):
-    if app.debug:
-        result = f"{SUCCESS_COL}Success!"
-
-        if error:
-            result = f"{ERROR_COL}Error: {error}"
-
-        print(f"        Turso Sync: {DB_COL}{operation} - {result}")
 
