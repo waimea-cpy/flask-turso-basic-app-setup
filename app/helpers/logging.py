@@ -199,15 +199,15 @@ def log_db_request(app, sql, params):
 #-----------------------------------------------------------
 def log_db_result(app, sql, result):
     if app.debug:
-        sqlUp = sql.upper()
+        sqlUp = sql.strip().upper()
 
         # Check the type of query
-        if 'SELECT' in sqlUp:
-            print(DB_DATA_HEADING   + _highlight(_format_result_rows(result), DB_COL))
-
-        elif 'UPDATE' in sqlUp or 'DELETE' in sqlUp:
+        if sqlUp.startswith('UPDATE') or sqlUp.startswith('DELETE'):
             print(DB_ROWS_HEADING   + _highlight(f"{getattr(result, 'rows_affected', result)} affected", DB_COL))
 
-        elif 'INSERT' in sqlUp:
+        elif sqlUp.startswith('INSERT'):
             print(DB_NEW_ID_HEADING + _highlight(f"{getattr(result, 'last_insert_rowid', result)}", DB_COL))
+
+        elif sqlUp.startswith('SELECT'):
+            print(DB_DATA_HEADING   + _highlight(_format_result_rows(result), DB_COL))
 
