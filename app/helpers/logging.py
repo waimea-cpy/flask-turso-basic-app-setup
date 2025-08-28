@@ -169,7 +169,7 @@ def _format_result_rows(result):
                 data[col] = val
         records.append(f"{dict(data)}")
 
-    return f"\n{SPACING}".join(records) if len(records) > 0 else "None"
+    return "[" + f",\n{SPACING} ".join(records) + "]"
 
 
 #-----------------------------------------------------------
